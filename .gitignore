@@ -1,0 +1,30 @@
+# Go build artifacts
+*.exe
+*.test
+*.out
+
+# Dependency directories (rare but possible)
+vendor/
+
+# IDE/editor config
+.vscode/
+.idea/
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# Logs and temp files
+*.log
+*.tmp
+tmp/
+
+# Air (live reload tool) config and state
+.air.toml
+.air/
+
+# Env and config files (secrets or local setup)
+.env
+
+# Personal notes (optional)
+notes.txt
