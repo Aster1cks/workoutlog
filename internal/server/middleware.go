@@ -1,10 +1,12 @@
 package server
 
-import "net/http"
+import (
+	"github.com/gin-gonic/gin"
+)
 
-func (app *Application) requestLogger(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		app.InfoLogger.Printf("%s - %s %s %s", r.RemoteAddr, r.Proto, r.Method, r.URL.RequestURI())
-		next.ServeHTTP(w, r)
-	})
+func (app *Application) requestLogger() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		app.InfoLogger.Printf("%s - %s %s %s", c.ClientIP(), c.Request.Proto, c.Request.Method, c.Request.RequestURI)
+		c.Next()
+	}
 }

@@ -1,105 +1,91 @@
 package server
 
 import (
-	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/Aster1cks/workoutlog/internal/database"
-	"github.com/gorilla/mux"
+	"github.com/gin-gonic/gin"
 )
 
-func (app *Application) home(w http.ResponseWriter, r *http.Request) {
+func (app *Application) home(c *gin.Context) {
 	values, err := app.Workouts.GetAll()
 	if err != nil {
-		app.serverError(w, err)
+		app.serverError(c, err)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(values)
+	c.JSON(http.StatusOK, values)
 }
 
-func (app *Application) delete(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	id, err := strconv.Atoi(vars["id"])
+func (app *Application) delete(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		app.serverError(w, err)
+		app.serverError(c, err)
 		return
 	}
 
 	values, err := app.Workouts.DeleteEntry(id)
 	if err != nil {
-		app.sqlError(w, err, id)
+		app.sqlError(c, err, id)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(values)
+	c.JSON(http.StatusOK, values)
 }
 
-func (app *Application) add(w http.ResponseWriter, r *http.Request) {
+func (app *Application) add(c *gin.Context) {
 	entry := database.Workoutentry{}
-	err := json.NewDecoder(r.Body).Decode(&entry)
+	err := c.BindJSON(&entry)
 	if err != nil {
-		app.serverError(w, err)
+		app.serverError(c, err)
 		return
 	}
 
 	id, err := app.Workouts.AddEntry(entry.WorkoutType, entry.Duration, entry.Notes)
 	if err != nil {
-		app.serverError(w, err)
+		app.serverError(c, err)
 		return
 	}
-	w.Header().Set("Content-Type", "text")
-	w.WriteHeader(http.StatusOK)
-	fmt.Fprintf(w, "New entry added\nCan be found here: http://localhost:4000/workout/%d", id)
+
+	c.String(http.StatusOK, "New entry added\nCan be found here: http://localhost:4000/workout/%d", id)
 }
 
-func (app *Application) edit(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	id, err := strconv.Atoi(vars["id"])
+func (app *Application) edit(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		app.serverError(w, err)
+		app.serverError(c, err)
 		return
 	}
-
 	entry := database.Workoutentry{}
-	err = json.NewDecoder(r.Body).Decode(&entry)
+
+	err = c.BindJSON(&entry)
 	if err != nil {
-		app.serverError(w, err)
+		app.serverError(c, err)
 		return
 	}
 
 	err = app.Workouts.EditEntry(entry.WorkoutType, entry.Duration, entry.Notes, id)
 	if err != nil {
-		app.sqlError(w, err, id)
+		app.sqlError(c, err, id)
 		return
 	}
 
-	w.Header().Set("Content-Type", "text")
-	w.WriteHeader(http.StatusOK)
-	link := fmt.Sprintf("http://localhost:4000/workout/%d", id)
-	fmt.Fprintf(w, "Eddited entry \nCan be found here: <a href=%s>View Workout</a>", link)
+	c.String(http.StatusOK, "Entry eddited\nCan be found here: http://localhost:4000/workout/%d", id)
+
 }
 
-func (app *Application) getByID(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	id, err := strconv.Atoi(vars["id"])
+func (app *Application) getByID(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		app.serverError(w, err)
+		app.serverError(c, err)
 	}
 
 	values, err := app.Workouts.EntryByID(id)
 	if err != nil {
-		app.sqlError(w, err, id)
+		app.sqlError(c, err, id)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(values)
+	c.JSON(http.StatusOK, values)
 }

@@ -6,7 +6,6 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"net/http"
 	"os"
 
 	"github.com/Aster1cks/workoutlog/internal/database"
@@ -49,14 +48,17 @@ func main() {
 		},
 	}
 
-	var srv = &http.Server{
-		Addr:     os.Getenv("PORT"),
-		ErrorLog: errorlog,
-		Handler:  app.Routes(),
-	}
+	// var srv = &http.Server{
+	// 	Addr:     os.Getenv("PORT"),
+	// 	ErrorLog: errorlog,
+	// 	Handler:  app.Routes(),
+	// }
+	addr := os.Getenv("PORT")
 
-	infolog.Printf("Starting server on %s", srv.Addr)
-	err = http.ListenAndServe(srv.Addr, srv.Handler)
+	ginsrv := app.Routes()
+	infolog.Printf("Starting server on %s", addr)
+	// err = http.ListenAndServe(srv.Addr, srv.Handler)
+	err = ginsrv.Run(addr)
 	if err != nil {
 		log.Fatal(err)
 	}

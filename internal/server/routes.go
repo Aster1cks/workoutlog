@@ -3,19 +3,23 @@ package server
 import (
 	"net/http"
 
-	"github.com/gorilla/mux"
+	"github.com/gin-gonic/gin"
 )
 
-func (app *Application) Routes() http.Handler {
-	mux := mux.NewRouter()
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		http.Redirect(w, r, "/workout", http.StatusMovedPermanently)
+func (app *Application) Routes() *gin.Engine {
+	r := gin.New()
+
+	r.Use(gin.Recovery(), app.requestLogger())
+
+	r.Any("/", func(ctx *gin.Context) {
+		ctx.Redirect(http.StatusMovedPermanently, "/workout")
 	})
-	mux.HandleFunc("/workout", app.home).Methods("GET")
-	mux.HandleFunc("/workout/{id}", app.delete).Methods("DELETE")
-	mux.HandleFunc("/workout/{id}", app.edit).Methods("PATCH")
-	mux.HandleFunc("/workout", app.add).Methods("POST")
-	mux.HandleFunc("/workout/{id}", app.getByID).Methods("GET")
+
+	r.Handle("GET", "/workout", app.home)
+	r.Handle("DELETE", "/workout/:id", app.delete)
+	r.Handle("PATCH", "/workout/:id", app.edit)
+	r.Handle("POST", "/workout", app.add)
+	r.Handle("GET", "/workout/:id", app.getByID)
 	//mux.HandleFunc(/)
-	return app.requestLogger(mux)
+	return r
 }
